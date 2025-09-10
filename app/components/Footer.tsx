@@ -1,68 +1,82 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import Image from "next/image";
+import Link from "next/link"
+import { BookOpen, MapPin, Mail, Phone } from "lucide-react"
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1A1F36] text-white py-10 px-6">
-      {/* Grid container */}
+    <footer className="bg-card border-t border-border py-12 px-6 mt-auto">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
-        
-        {/* Column 1 */}
+        {/* Column 1 - Brand */}
         <div>
-          <h2 className="flex items-center gap-2 text-2xl font-bold">
-            <Image src="/Frame.svg" alt="Bookstore Logo" width={40} height={40} />
-            Bookstore
-          </h2>
-          <p className="mt-4 text-gray-300 text-sm">
-            Your destination for discovering great books and expanding your knowledge.
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-primary rounded-lg">
+              <BookOpen className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <h2 className="text-2xl font-bold font-[var(--font-playfair)] text-foreground">BookStore</h2>
+          </div>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Your destination for discovering great books and expanding your knowledge. Curated collections for every
+            reader's journey.
           </p>
-         
-         
         </div>
 
-        {/* Column 2 */}
+        {/* Column 2 - Quick Links */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Quick Links</h2>
-          <ul className="space-y-2 text-gray-300 text-sm">
+          <h3 className="text-lg font-semibold mb-4 text-foreground">Quick Links</h3>
+          <ul className="space-y-3 text-muted-foreground text-sm">
             <li>
-              <Link href="/" className="hover:text-white transition">Home</Link>
+              <Link href="/" className="hover:text-primary transition-colors">
+                Home
+              </Link>
             </li>
             <li>
-              <Link href="/about" className="hover:text-white transition">About</Link>
+              <Link href="/books" className="hover:text-primary transition-colors">
+                Books
+              </Link>
             </li>
             <li>
-              <Link href="/shop" className="hover:text-white transition">Shop</Link>
+              <Link href="/categories" className="hover:text-primary transition-colors">
+                Categories
+              </Link>
             </li>
             <li>
-              <Link href="/contact" className="hover:text-white transition">Contact</Link>
+              <Link href="/about" className="hover:text-primary transition-colors">
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact" className="hover:text-primary transition-colors">
+                Contact
+              </Link>
             </li>
           </ul>
         </div>
 
-        {/* Column 3  */}
+        {/* Column 3 - Contact Info */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Contact Us</h2>
-          <p className="flex items-center gap-2 text-gray-300 text-sm mb-2">
-            <Image src="/location.svg" alt="Location Icon" width={20} height={20} />
-            <span>123 Book St, Library City, 45678</span>
-          </p>
-          <p className="flex items-center gap-2 text-gray-300 text-sm mb-2">
-            <Image src="/email.svg" alt="Email Icon" width={20} height={20} />
-            <span>info@bookstore.com</span>
-          </p>
-          <p className="flex items-center gap-2 text-gray-300 text-sm">
-            <Image src="/phone.svg" alt="Phone Icon" width={20} height={20} />
-            <span>(123) 456-7890</span>
-          </p>
+          <h3 className="text-lg font-semibold mb-4 text-foreground">Contact Us</h3>
+          <div className="space-y-3 text-muted-foreground text-sm">
+            <div className="flex items-center gap-3">
+              <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>123 Book Street, Library City, 45678</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Mail className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>info@bookstore.com</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Phone className="h-4 w-4 text-primary flex-shrink-0" />
+              <span>(123) 456-7890</span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Bottom section */}
-      <div className="text-center border-t border-gray-700 mt-8 pt-4 text-gray-400 text-sm">
-        <p>&copy; 2025 Bookstore. All rights reserved.</p>
+      <div className="text-center border-t border-border mt-10 pt-6 text-muted-foreground text-sm">
+        <p>&copy; 2025 BookStore. All rights reserved. Built with care for book lovers.</p>
       </div>
     </footer>
-  );
+  )
 }

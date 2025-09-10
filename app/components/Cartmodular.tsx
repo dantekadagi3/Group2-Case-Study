@@ -1,4 +1,3 @@
-
 import { useCart } from "@/app/context/CartContext";
 
 export default function Cartwindow(){

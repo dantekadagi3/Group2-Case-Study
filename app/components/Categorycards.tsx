@@ -1,4 +1,3 @@
-
 import Image from "next/image";
 
 type CategoryCardProps = {
@@ -20,5 +19,3 @@ export default function CategoryCard({ title, image, description }: CategoryCard
     </div>
   );
 };
-
-
