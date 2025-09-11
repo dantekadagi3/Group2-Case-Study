@@ -1,3 +1,4 @@
+import Link from "next/link";
 import BookCard from "./components/Bookcard";
 import CategoryCard from "./components/Categorycards";
 import Button from "./components/ui/Buttons";
@@ -23,10 +24,14 @@ export default function HomePage() {
 
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <Button name="Browse Books" className="py-4 px-6" />
-            <Button
-              name="Join Membership"
-              className="py-4 px-6 bg-transparent border border-sky-400"
-            />
+
+
+            <Link href="/signup">
+              <button className="py-4 px-6 bg-transparent border border-sky-400 hover:bg-sky-400 text-white font-bold text">
+                Join Membership
+              </button>
+            </Link>
+
           </div>
         </div>
       </section>
