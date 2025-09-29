@@ -1,5 +1,3 @@
-// Mock Quikk API M-Pesa Integration Service
-// In production, replace with actual Quikk API calls
 
 export interface MpesaPaymentRequest {
   amount: number

@@ -14,7 +14,9 @@ import { useState } from "react"
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, clearCart, totalPrice, totalItems } = useCart()
-  const { user } = useAuth()
+  const { user, supabaseUser } = useAuth()
+  console.log('CartPage user:', user)
+  console.log('CartPage supabaseUser:', supabaseUser)
   const [promoCode, setPromoCode] = useState("")
   const [discount, setDiscount] = useState(0)
 
