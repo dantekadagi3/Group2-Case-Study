@@ -14,11 +14,12 @@ import { BookOpen, Search, ArrowRight, Filter } from "lucide-react"
 interface Category {
   id: string
 
-  
+
   name: string
   description: string
   book_count: number
   sample_books: Array<{
+    
     id: string
     title: string
     image_url: string
