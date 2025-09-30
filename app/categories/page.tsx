@@ -13,6 +13,8 @@ import { BookOpen, Search, ArrowRight, Filter } from "lucide-react"
 
 interface Category {
   id: string
+
+  
   name: string
   description: string
   book_count: number
