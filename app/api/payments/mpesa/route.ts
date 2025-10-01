@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     // Format phone number
     const formattedPhone = paymentService.formatPhoneNumber(phoneNumber)
 
-    // Initiate M-Pesa payment
+    // Initiate M-Pesa payment through Quikk
     const paymentResponse = await paymentService.initiateMpesaPayment({
       amount: Number.parseFloat(amount),
       phoneNumber: formattedPhone,
@@ -27,13 +27,20 @@ export async function POST(request: NextRequest) {
     })
 
     if (!paymentResponse.success) {
-      return NextResponse.json({ error: paymentResponse.errorMessage }, { status: 400 })
+      console.error("[v0] Quikk payment initiation failed:", paymentResponse.errorMessage);
+      return NextResponse.json({ 
+        error: paymentResponse.errorMessage || "Payment initiation failed",
+        code: "PAYMENT_FAILED"
+      }, { 
+        status: 400 
+      })
     }
 
     return NextResponse.json({
       success: true,
       checkoutRequestId: paymentResponse.checkoutRequestId,
       message: paymentResponse.customerMessage,
+      transactionReference: orderReference,
     })
   } catch (error) {
     console.error("[v0] M-Pesa API error:", error)
