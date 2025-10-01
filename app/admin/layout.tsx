@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { LayoutDashboard, ShoppingCart, CreditCard, Users, BookOpen, Settings, LogOut, Menu } from "lucide-react"
 import { useState } from "react"
+import { ThemeProvider } from "@/components/theme-provider"
+import { GeistSans } from 'geist/font'
+
+const geistSans = GeistSans
 
 const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -19,7 +23,11 @@ const adminNavItems = [
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const { user, logout, isLoading } = useAuth()
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)

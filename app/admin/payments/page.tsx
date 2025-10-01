@@ -1,6 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { adminService } from "@/lib/admin-service"
+import { mpesaService } from "@/lib/mpesa-service"
+import { type PaymentTransaction, type AdminStats } from "@/lib/admin-data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,24 +22,72 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react"
-import { mockTransactions, mockAdminStats } from "@/lib/admin-data"
 
 export default function PaymentsPage() {
-  const [transactions, setTransactions] = useState(mockTransactions)
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [methodFilter, setMethodFilter] = useState<string>("all")
+  const [isLoading, setIsLoading] = useState(true)
+  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isSearching, setIsSearching] = useState(false)
+
+  const searchTransaction = async (receiptNumber: string) => {
+    try {
+      setIsSearching(true)
+      const result = await mpesaService.searchTransaction(receiptNumber)
+      // Update the local transaction with the latest status
+      setTransactions(prev => prev.map(tx => 
+        tx.mpesa_receipt_number === receiptNumber
+          ? {
+              ...tx,
+              status: result.data.attributes.status as PaymentTransaction['status'],
+              result_code: result.data.attributes.result_code,
+              result_description: result.data.attributes.result_description
+            }
+          : tx
+      ))
+    } catch (error) {
+      console.error('Error searching transaction:', error)
+      setError('Failed to search transaction status')
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const [transactionsData, statsData] = await Promise.all([
+        adminService.getTransactions(),
+        adminService.getAdminStats()
+      ])
+      setTransactions(transactionsData)
+      setStats(statsData)
+    } catch (error) {
+      console.error('Error loading payment data:', error)
+      setError('Failed to load payment data. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
 
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
-      transaction.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.customerEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (transaction.mpesaReceiptNumber &&
-        transaction.mpesaReceiptNumber.toLowerCase().includes(searchQuery.toLowerCase()))
+      (transaction.orderNumber && transaction.orderNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (transaction.customerName && transaction.customerName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (transaction.customerEmail && transaction.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (transaction.mpesa_receipt_number &&
+        transaction.mpesa_receipt_number.toLowerCase().includes(searchQuery.toLowerCase()))
 
     const matchesStatus = statusFilter === "all" || transaction.status === statusFilter
-    const matchesMethod = methodFilter === "all" || transaction.paymentMethod === methodFilter
+    const matchesMethod = methodFilter === "all" || transaction.payment_method === methodFilter
 
     return matchesSearch && matchesStatus && matchesMethod
   })
@@ -65,7 +116,30 @@ export default function PaymentsPage() {
     return <Badge variant={variants[status as keyof typeof variants] as any}>{status}</Badge>
   }
 
-  const stats = mockAdminStats
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <AlertTriangle className="h-8 w-8 text-destructive mx-auto" />
+          <p className="text-destructive">{error}</p>
+          <Button onClick={loadData} variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading || !stats) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <Clock className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+          <p className="text-muted-foreground">Loading payment data...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -95,7 +169,7 @@ export default function PaymentsPage() {
               <CheckCircle className="h-5 w-5 text-green-500" />
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-xl font-bold">{transactions.filter((t) => t.status === "completed").length}</p>
+                <p className="text-xl font-bold">{stats?.paymentMethodStats?.mpesa || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -213,7 +287,7 @@ export default function PaymentsPage() {
                     <TableCell>
                       <div>
                         <div className="font-medium">{transaction.orderNumber}</div>
-                        <div className="text-xs text-muted-foreground">ID: {transaction.orderId}</div>
+                        <div className="text-xs text-muted-foreground">Order ID: {transaction.order_id}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -224,19 +298,18 @@ export default function PaymentsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">${transaction.amount.toFixed(2)}</div>
-                      <div className="text-xs text-muted-foreground">{transaction.currency}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {transaction.paymentMethod === "mpesa" ? (
+                        {transaction.payment_method === "mpesa" ? (
                           <Smartphone className="h-4 w-4 text-green-600" />
                         ) : (
                           <CreditCard className="h-4 w-4 text-blue-600" />
                         )}
-                        <span className="capitalize">{transaction.paymentMethod}</span>
+                        <span className="capitalize">{transaction.payment_method}</span>
                       </div>
-                      {transaction.phoneNumber && (
-                        <div className="text-xs text-muted-foreground">{transaction.phoneNumber}</div>
+                      {transaction.phone_number && (
+                        <div className="text-xs text-muted-foreground">{transaction.phone_number}</div>
                       )}
                     </TableCell>
                     <TableCell>
@@ -244,28 +317,35 @@ export default function PaymentsPage() {
                         {getStatusIcon(transaction.status)}
                         {getStatusBadge(transaction.status)}
                       </div>
-                      {transaction.resultDescription && (
-                        <div className="text-xs text-muted-foreground mt-1">{transaction.resultDescription}</div>
+                      {transaction.result_description && (
+                        <div className="text-xs text-muted-foreground mt-1">{transaction.result_description}</div>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="font-mono text-sm">
-                        {transaction.mpesaReceiptNumber || transaction.checkoutRequestId || "N/A"}
+                        {transaction.mpesa_receipt_number || transaction.transaction_id || "N/A"}
                       </div>
-                      {transaction.resultCode && (
-                        <div className="text-xs text-muted-foreground">Code: {transaction.resultCode}</div>
-                      )}
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">{new Date(transaction.transactionDate).toLocaleDateString()}</div>
+                      <div className="text-sm">{new Date(transaction.created_at).toLocaleDateString()}</div>
                       <div className="text-xs text-muted-foreground">
-                        {new Date(transaction.transactionDate).toLocaleTimeString()}
+                        {new Date(transaction.created_at).toLocaleTimeString()}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => transaction.mpesa_receipt_number && searchTransaction(transaction.mpesa_receipt_number)}
+                          disabled={isSearching || !transaction.mpesa_receipt_number}
+                        >
+                          <RefreshCw className={`h-4 w-4 ${isSearching ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

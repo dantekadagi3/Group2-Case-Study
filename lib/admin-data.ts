@@ -1,9 +1,21 @@
 export interface Order {
   id: string
-  orderNumber: string
-  customerId: string
-  customerName: string
-  customerEmail: string
+  customer_id: string
+  total_amount: number
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+  payment_status: "pending" | "paid" | "failed" | "refunded"
+  payment_method: "mpesa" | "card" | null
+  shipping_address: {
+    address: string
+    city: string
+    postal_code: string
+    phone: string
+  }
+  created_at: string
+  updated_at: string
+  // Frontend display fields
+  customerName?: string
+  customerEmail?: string
   items: Array<{
     bookId: string
     title: string
@@ -11,42 +23,25 @@ export interface Order {
     quantity: number
     price: number
   }>
-  subtotal: number
-  shipping: number
-  total: number
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
-  paymentStatus: "pending" | "completed" | "failed" | "refunded"
-  paymentMethod: "mpesa" | "card"
-  mpesaReceiptNumber?: string
-  checkoutRequestId?: string
-  shippingAddress: {
-    firstName: string
-    lastName: string
-    address: string
-    city: string
-    postalCode: string
-    phone: string
-  }
-  createdAt: string
-  updatedAt: string
 }
 
 export interface PaymentTransaction {
   id: string
-  orderId: string
-  orderNumber: string
+  order_id: string
   amount: number
-  currency: "KES" | "USD"
-  paymentMethod: "mpesa" | "card"
+  payment_method: "mpesa" | "card"
+  transaction_id?: string
+  mpesa_receipt_number?: string
+  phone_number?: string
   status: "pending" | "completed" | "failed" | "cancelled"
-  mpesaReceiptNumber?: string
-  checkoutRequestId?: string
-  phoneNumber?: string
-  resultCode?: string
-  resultDescription?: string
-  transactionDate: string
-  customerName: string
-  customerEmail: string
+  created_at: string
+  updated_at: string
+  result_code?: string
+  result_description?: string
+  // Frontend display fields
+  orderNumber?: string
+  customerName?: string
+  customerEmail?: string
 }
 
 export interface AdminStats {
@@ -67,8 +62,7 @@ export interface AdminStats {
 export const mockOrders: Order[] = [
   {
     id: "1",
-    orderNumber: "ORD-001234",
-    customerId: "1",
+    customer_id: "1",
     customerName: "John Doe",
     customerEmail: "john@example.com",
     items: [
@@ -87,29 +81,22 @@ export const mockOrders: Order[] = [
         price: 13.99,
       },
     ],
-    subtotal: 40.97,
-    shipping: 5.99,
-    total: 46.96,
+    total_amount: 46.96,
     status: "delivered",
-    paymentStatus: "completed",
-    paymentMethod: "mpesa",
-    mpesaReceiptNumber: "NLJ7RT61SV",
-    checkoutRequestId: "ws_CO_1234567890",
-    shippingAddress: {
-      firstName: "John",
-      lastName: "Doe",
+    payment_status: "paid",
+    payment_method: "mpesa",
+    shipping_address: {
       address: "123 Main St",
       city: "Nairobi",
-      postalCode: "00100",
+      postal_code: "00100",
       phone: "254712345678",
     },
-    createdAt: "2024-01-15T10:30:00Z",
-    updatedAt: "2024-01-16T14:20:00Z",
+    created_at: "2024-01-15T10:30:00Z",
+    updated_at: "2024-01-16T14:20:00Z",
   },
   {
     id: "2",
-    orderNumber: "ORD-001235",
-    customerId: "2",
+    customer_id: "2",
     customerName: "Jane Smith",
     customerEmail: "jane@example.com",
     items: [
@@ -121,28 +108,22 @@ export const mockOrders: Order[] = [
         price: 11.99,
       },
     ],
-    subtotal: 11.99,
-    shipping: 5.99,
-    total: 17.98,
+    total_amount: 17.98,
     status: "processing",
-    paymentStatus: "completed",
-    paymentMethod: "mpesa",
-    mpesaReceiptNumber: "NLJ8RT62SV",
-    shippingAddress: {
-      firstName: "Jane",
-      lastName: "Smith",
+    payment_status: "paid",
+    payment_method: "mpesa",
+    shipping_address: {
       address: "456 Oak Ave",
       city: "Mombasa",
-      postalCode: "80100",
+      postal_code: "80100",
       phone: "254723456789",
     },
-    createdAt: "2024-01-16T09:15:00Z",
-    updatedAt: "2024-01-16T09:15:00Z",
+    created_at: "2024-01-16T09:15:00Z",
+    updated_at: "2024-01-16T09:15:00Z",
   },
   {
     id: "3",
-    orderNumber: "ORD-001236",
-    customerId: "3",
+    customer_id: "3",
     customerName: "Bob Wilson",
     customerEmail: "bob@example.com",
     items: [
@@ -154,76 +135,65 @@ export const mockOrders: Order[] = [
         price: 10.99,
       },
     ],
-    subtotal: 10.99,
-    shipping: 5.99,
-    total: 16.98,
+    total_amount: 16.98,
     status: "pending",
-    paymentStatus: "failed",
-    paymentMethod: "mpesa",
-    checkoutRequestId: "ws_CO_1234567891",
-    shippingAddress: {
-      firstName: "Bob",
-      lastName: "Wilson",
+    payment_status: "failed",
+    payment_method: "mpesa",
+    shipping_address: {
       address: "789 Pine St",
       city: "Kisumu",
-      postalCode: "40100",
+      postal_code: "40100",
       phone: "254734567890",
     },
-    createdAt: "2024-01-16T15:45:00Z",
-    updatedAt: "2024-01-16T15:45:00Z",
+    created_at: "2024-01-16T15:45:00Z",
+    updated_at: "2024-01-16T15:45:00Z",
   },
 ]
 
 export const mockTransactions: PaymentTransaction[] = [
   {
     id: "1",
-    orderId: "1",
-    orderNumber: "ORD-001234",
+    order_id: "1",
     amount: 46.96,
-    currency: "USD",
-    paymentMethod: "mpesa",
+    payment_method: "mpesa",
     status: "completed",
-    mpesaReceiptNumber: "NLJ7RT61SV",
-    checkoutRequestId: "ws_CO_1234567890",
-    phoneNumber: "254712345678",
-    resultCode: "0",
-    resultDescription: "The service request is processed successfully.",
-    transactionDate: "2024-01-15T10:35:00Z",
+    mpesa_receipt_number: "NLJ7RT61SV",
+    transaction_id: "ws_CO_1234567890",
+    phone_number: "254712345678",
+    created_at: "2024-01-15T10:35:00Z",
+    updated_at: "2024-01-15T10:35:00Z",
+    orderNumber: "ORD-001234",
     customerName: "John Doe",
-    customerEmail: "john@example.com",
+    customerEmail: "john@example.com"
   },
   {
     id: "2",
-    orderId: "2",
-    orderNumber: "ORD-001235",
+    order_id: "2",
     amount: 17.98,
-    currency: "USD",
-    paymentMethod: "mpesa",
+    payment_method: "mpesa",
     status: "completed",
-    mpesaReceiptNumber: "NLJ8RT62SV",
-    checkoutRequestId: "ws_CO_1234567891",
-    phoneNumber: "254723456789",
-    resultCode: "0",
-    resultDescription: "The service request is processed successfully.",
-    transactionDate: "2024-01-16T09:20:00Z",
+    mpesa_receipt_number: "NLJ8RT62SV",
+    transaction_id: "ws_CO_1234567891",
+    phone_number: "254723456789",
+    created_at: "2024-01-16T09:20:00Z",
+    updated_at: "2024-01-16T09:20:00Z",
+    orderNumber: "ORD-001235",
     customerName: "Jane Smith",
-    customerEmail: "jane@example.com",
+    customerEmail: "jane@example.com"
   },
   {
     id: "3",
-    orderId: "3",
-    orderNumber: "ORD-001236",
+    order_id: "3",
     amount: 16.98,
-    currency: "USD",
-    paymentMethod: "mpesa",
+    payment_method: "mpesa",
     status: "failed",
-    checkoutRequestId: "ws_CO_1234567892",
-    phoneNumber: "254734567890",
-    resultCode: "1032",
-    resultDescription: "Request cancelled by user",
-    transactionDate: "2024-01-16T15:50:00Z",
+    transaction_id: "ws_CO_1234567892",
+    phone_number: "254734567890",
+    created_at: "2024-01-16T15:50:00Z",
+    updated_at: "2024-01-16T15:50:00Z",
+    orderNumber: "ORD-001236",
     customerName: "Bob Wilson",
-    customerEmail: "bob@example.com",
+    customerEmail: "bob@example.com"
   },
 ]
 
@@ -259,11 +229,11 @@ export function getTransactionsByStatus(status: PaymentTransaction["status"]): P
 }
 
 export function getRecentOrders(limit = 10): Order[] {
-  return mockOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, limit)
+  return mockOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, limit)
 }
 
 export function getRecentTransactions(limit = 10): PaymentTransaction[] {
   return mockTransactions
-    .sort((a, b) => new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime())
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, limit)
 }

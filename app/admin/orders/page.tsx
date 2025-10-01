@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,15 +9,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ShoppingCart, Search, Filter, Eye, Package, Truck, CheckCircle, Clock, X } from "lucide-react"
 import { mockOrders, type Order } from "@/lib/admin-data"
+import { adminService } from "@/lib/admin-service"
+
+
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(mockOrders)
+  const [orders, setOrders] = useState<Order[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        setIsLoading(true)
+        const data = await adminService.getOrders()
+        setOrders(data)
+      } catch (error) {
+        console.error('Error loading orders:', error)
+        // You might want to show an error toast here
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadOrders()
+  }, [])
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
-      order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (order.id?.toLowerCase().includes(searchQuery.toLowerCase())) ||
       order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())
 
@@ -170,15 +191,15 @@ export default function OrdersPage() {
                   <TableRow key={order.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{order.orderNumber}</div>
-                        <div className="text-xs text-muted-foreground">ID: {order.id}</div>
+                        <div className="font-medium">Order #{order.id}</div>
+                        <div className="text-xs text-muted-foreground">Customer ID: {order.customer_id}</div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">{order.customerName}</div>
                         <div className="text-xs text-muted-foreground">{order.customerEmail}</div>
-                        <div className="text-xs text-muted-foreground">{order.shippingAddress.phone}</div>
+                        <div className="text-xs text-muted-foreground">{order.shipping_address.phone}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -195,11 +216,7 @@ export default function OrdersPage() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">${order.total.toFixed(2)}</div>
-                        <div className="text-xs text-muted-foreground">Subtotal: ${order.subtotal.toFixed(2)}</div>
-                        {order.shipping > 0 && (
-                          <div className="text-xs text-muted-foreground">Shipping: ${order.shipping.toFixed(2)}</div>
-                        )}
+                        <div className="font-medium">${order.total_amount.toFixed(2)}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -227,17 +244,14 @@ export default function OrdersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        {getPaymentStatusBadge(order.paymentStatus)}
-                        <div className="text-xs text-muted-foreground capitalize">{order.paymentMethod}</div>
-                        {order.mpesaReceiptNumber && (
-                          <div className="text-xs font-mono">{order.mpesaReceiptNumber}</div>
-                        )}
+                        {getPaymentStatusBadge(order.payment_status)}
+                        <div className="text-xs text-muted-foreground capitalize">{order.payment_method}</div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</div>
+                      <div className="text-sm">{new Date(order.created_at).toLocaleDateString()}</div>
                       <div className="text-xs text-muted-foreground">
-                        {new Date(order.createdAt).toLocaleTimeString()}
+                        {new Date(order.created_at).toLocaleTimeString()}
                       </div>
                     </TableCell>
                     <TableCell>

@@ -28,6 +28,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Check if the current page is an admin page
+  const isAdminPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')
+
+  if (isAdminPage) {
+    return children
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${playfairDisplay.variable} antialiased`}>
