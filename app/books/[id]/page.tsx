@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { getBookById, getAuthorById, getBooksByAuthor } from "@/lib/mock-data"
+import { getBookById, getAuthorById, getBooksByAuthor, type BookDetails, type Author } from "@/lib/book-service"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -32,8 +32,57 @@ export default function BookDetailPage() {
   const params = useParams()
   const bookId = params.id as string
   const [selectedTab, setSelectedTab] = useState<"description" | "details" | "reviews">("description")
+  const [isLoading, setIsLoading] = useState(true)
+  const [book, setBook] = useState<BookDetails | null>(null)
+  const [author, setAuthor] = useState<Author | null>(null)
+  const [relatedBooks, setRelatedBooks] = useState<BookDetails[]>([])
 
-  const book = getBookById(bookId)
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true)
+      try {
+        const bookData = await getBookById(bookId)
+        setBook(bookData)
+
+        if (bookData?.authorId) {
+          const [authorData, relatedBooksData] = await Promise.all([
+            getAuthorById(bookData.authorId),
+            getBooksByAuthor(bookData.authorId)
+          ])
+          setAuthor(authorData)
+          // Convert Book[] to BookDetails[]
+          const relatedBookDetails = relatedBooksData.map(b => ({
+            ...b,
+            authorId: bookData.authorId,
+            publishedDate: undefined,
+            pages: undefined,
+            isbn: undefined,
+            rating: 4.5,
+            reviewCount: 0,
+            genre: b.category ? [b.category] : []
+          })).filter(b => b.id !== bookId)
+          setRelatedBooks(relatedBookDetails)
+        }
+      } catch (error) {
+        console.error('Error loading book details:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [bookId])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">Loading book details...</h2>
+          <p className="text-muted-foreground">Please wait</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!book) {
     return (
@@ -52,8 +101,7 @@ export default function BookDetailPage() {
     )
   }
 
-  const author = getAuthorById(book.authorId)
-  const otherBooksByAuthor = getBooksByAuthor(book.authorId).filter((b) => b.id !== book.id)
+  // Removed as we now use state variables
 
   return (
     <div className="min-h-screen bg-background">
@@ -75,8 +123,8 @@ export default function BookDetailPage() {
           {/* Book Image */}
           <div className="flex justify-center">
             <div className="relative w-full max-w-md aspect-[3/4] bg-muted rounded-lg overflow-hidden shadow-lg">
-              <Image src={book.image || "/placeholder.svg"} alt={book.title} fill className="object-cover" priority />
-              {!book.inStock && (
+              <Image src={book.image_url || "/placeholder.svg"} alt={book.title} fill className="object-cover" priority />
+              {!(book.stock_quantity && book.stock_quantity > 0) && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <Badge variant="destructive" className="text-lg px-4 py-2">
                     Out of Stock
@@ -95,7 +143,7 @@ export default function BookDetailPage() {
               <p className="text-xl text-muted-foreground mb-4">by {book.author}</p>
 
               <div className="flex items-center gap-4 mb-4">
-                <StarRating rating={book.rating} size="lg" />
+                <StarRating rating={book.rating || 4.5} size="lg" />
                 <span className="text-muted-foreground">({book.reviewCount} reviews)</span>
               </div>
 
@@ -114,11 +162,23 @@ export default function BookDetailPage() {
                   <span className="text-3xl font-bold text-primary">${book.price.toFixed(2)}</span>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Package className="h-4 w-4" />
-                    {book.inStock ? "In Stock" : "Out of Stock"}
+                    {(book.stock_quantity && book.stock_quantity > 0) ? "In Stock" : "Out of Stock"}
                   </div>
                 </div>
 
-                <CartButton book={book} disabled={!book.inStock} className="w-full" size="lg" />
+                <CartButton 
+                  book={{
+                    id: book.id,
+                    title: book.title,
+                    author: book.author,
+                    description: book.description,
+                    price: book.price,
+                    image: book.image_url || '/placeholder.jpg'
+                  }} 
+                  disabled={!(book.stock_quantity && book.stock_quantity > 0)} 
+                  className="w-full" 
+                  size="lg" 
+                />
 
                 <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border text-sm">
                   <div className="flex items-center gap-2">
@@ -127,7 +187,7 @@ export default function BookDetailPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{new Date(book.publishedDate).getFullYear()}</span>
+                    <span>{book.publishedDate ? new Date(book.publishedDate).getFullYear() : 'N/A'}</span>
                   </div>
                 </div>
               </CardContent>
@@ -166,15 +226,15 @@ export default function BookDetailPage() {
                     <h3 className="text-xl font-semibold mb-3">About the Author</h3>
                     <div className="flex gap-4">
                       <Image
-                        src={author.image || "/placeholder.svg"}
-                        alt={`${author.firstName} ${author.lastName}`}
+                        src={author.image_url || "/placeholder.svg"}
+                        alt={author.name}
                         width={80}
                         height={80}
                         className="rounded-full"
                       />
                       <div>
                         <h4 className="font-medium text-lg">
-                          {author.firstName} {author.lastName}
+                          {author.name}
                         </h4>
                         <p className="text-muted-foreground mt-2">{author.biography}</p>
                       </div>
@@ -195,7 +255,7 @@ export default function BookDetailPage() {
                     </div>
                     <div>
                       <dt className="font-medium text-muted-foreground">Published</dt>
-                      <dd>{new Date(book.publishedDate).toLocaleDateString()}</dd>
+                      <dd>{book.publishedDate ? new Date(book.publishedDate).toLocaleDateString() : 'Not available'}</dd>
                     </div>
                     <div>
                       <dt className="font-medium text-muted-foreground">Pages</dt>
@@ -222,23 +282,23 @@ export default function BookDetailPage() {
         </div>
 
         {/* Related Books */}
-        {otherBooksByAuthor.length > 0 && (
+        {relatedBooks.length > 0 && (
           <div>
             <h2 className="text-2xl font-bold font-[var(--font-playfair)] mb-6">More books by {book.author}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {otherBooksByAuthor.slice(0, 4).map((relatedBook) => (
+              {relatedBooks.slice(0, 4).map((relatedBook) => (
                 <BookCard
                   key={relatedBook.id}
                   id={relatedBook.id}
                   title={relatedBook.title}
                   author={relatedBook.author}
-                  image={relatedBook.image}
+                  image={relatedBook.image_url || '/placeholder.jpg'}
                   description={relatedBook.description}
                   price={relatedBook.price}
-                  rating={relatedBook.rating}
-                  reviewCount={relatedBook.reviewCount}
+                  rating={relatedBook.rating || 4.5}
+                  reviewCount={relatedBook.reviewCount || 0}
                   genre={relatedBook.genre}
-                  inStock={relatedBook.inStock}
+                  inStock={relatedBook.stock_quantity ? relatedBook.stock_quantity > 0 : true}
                 />
               ))}
             </div>

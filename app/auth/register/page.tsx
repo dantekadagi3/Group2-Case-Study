@@ -34,9 +34,12 @@ export default function RegisterPage() {
     }))
   }
 
+  const [registrationStatus, setRegistrationStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setRegistrationStatus('idle')
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
@@ -49,11 +52,25 @@ export default function RegisterPage() {
     }
 
     try {
-      const success = await register(formData.email, formData.password, formData.firstName, formData.lastName)
+      const { success, message } = await register(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName
+      )
+
       if (success) {
-        router.push("/")
+        setRegistrationStatus('success')
+        // Show success message for 3 seconds before redirecting
+        setTimeout(() => {
+          router.push(`/auth/login?message=${encodeURIComponent(message)}`)
+        }, 3000)
+      } else {
+        setRegistrationStatus('error')
+        setError(message)
       }
-    } catch (err) {
+    } catch (err: any) {
+      setRegistrationStatus('error')
       setError("Registration failed. Please try again.")
     }
   }
@@ -77,6 +94,14 @@ export default function RegisterPage() {
             <CardDescription>Fill in your details to get started</CardDescription>
           </CardHeader>
           <CardContent>
+            {registrationStatus === 'success' && (
+              <Alert className="mb-4 bg-success/20 text-success border-success">
+                <AlertDescription className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-success border-t-transparent"></span>
+                  Registration successful! Please check your email and wait while we redirect you...
+                </AlertDescription>
+              </Alert>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <Alert variant="destructive">

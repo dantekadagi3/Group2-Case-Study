@@ -1,11 +1,38 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import BookCard from "./components/Bookcard"
 import CategoryCard from "./components/Categorycards"
 import Button from "./components/ui/Buttons"
-import { getFeaturedBooks, mockGenres } from "@/lib/mock-data"
+import { getFeaturedBooks } from "@/lib/book-service"
+import type { Book } from "@/lib/book-service"
 import Link from "next/link"
+import { getCategories } from "@/lib/book-service"
+import type { Category } from "@/lib/book-service"
 
 export default function HomePage() {
-  const featuredBooks = getFeaturedBooks()
+  const [featuredBooks, setFeaturedBooks] = useState<Book[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [booksData, categoriesData] = await Promise.all([
+          getFeaturedBooks(),
+          getCategories()
+        ])
+        setFeaturedBooks(booksData)
+        setCategories(categoriesData)
+      } catch (error) {
+        console.error('Error loading featured data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
 
   return (
     <main>
@@ -48,19 +75,28 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {featuredBooks.map((book) => (
+            {isLoading ? (
+              // Loading skeletons
+              [...Array(5)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-muted aspect-[3/4] rounded-lg mb-4"></div>
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                </div>
+              ))
+            ) : featuredBooks.map((book) => (
               <BookCard
                 key={book.id}
                 id={book.id}
                 title={book.title}
                 author={book.author}
-                image={book.image}
+                image={book.image_url || '/placeholder.jpg'}
                 description={book.description}
                 price={book.price}
                 rating={book.rating}
                 reviewCount={book.reviewCount}
-                genre={book.genre}
-                inStock={book.inStock}
+                genre={book.category ? [book.category] : []}
+                inStock={book.stock_quantity ? book.stock_quantity > 0 : true}
               />
             ))}
           </div>
@@ -77,12 +113,20 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-            {mockGenres.slice(0, 8).map((genre) => (
+            {isLoading ? (
+              // Loading skeletons for categories
+              [...Array(8)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-muted aspect-square rounded-lg mb-4"></div>
+                  <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
+                </div>
+              ))
+            ) : categories.slice(0, 8).map((category) => (
               <CategoryCard
-                key={genre.id}
-                title={genre.name}
-                image={`/placeholder.svg?height=200&width=200&query=${genre.name} books category`}
-                description={genre.description}
+                key={category.id}
+                title={category.name}
+                image={`/placeholder.svg?height=200&width=200&query=${category.name} books category`}
+                description={category.description || ''}
               />
             ))}
           </div>

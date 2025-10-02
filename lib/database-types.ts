@@ -53,21 +53,30 @@ export interface Database {
       customers: {
         Row: {
           id: string
-          first_name: string
-          last_name: string
+          first_name: string | null
+          last_name: string | null
           email: string
+          is_admin: boolean
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
-          first_name: string
-          last_name: string
+          first_name?: string | null
+          last_name?: string | null
           email: string
+          is_admin?: boolean
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
-          first_name?: string
-          last_name?: string
+          first_name?: string | null
+          last_name?: string | null
           email?: string
+          is_admin?: boolean
+          created_at?: string
+          updated_at?: string
         }
       }
       order_items: {

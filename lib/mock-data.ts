@@ -1,20 +1,24 @@
+// import { mockBooks } from './mock-books'
+
 export interface Book {
-  id: string
+  id: string  // UUID
   title: string
   author: string
-  authorId: string
+  authorId?: string
   image: string
   description: string
   price: number
-  genre: string[]
-  isbn: string
-  publishedDate: string
-  pages: number
-  rating: number
-  reviewCount: number
-  inStock: boolean
-  featured: boolean
+  genre?: string[]
+  isbn?: string
+  publishedDate?: string
+  pages?: number
+  rating?: number
+  reviewCount?: number
+  inStock?: boolean
+  featured?: boolean
 }
+
+// export const books = Book
 
 export interface Author {
   id: string
@@ -267,7 +271,7 @@ export function getBookById(id: string): Book | undefined {
 }
 
 export function getBooksByGenre(genre: string): Book[] {
-  return mockBooks.filter((book) => book.genre.includes(genre))
+  return mockBooks.filter((book) => book.genre && book.genre.includes(genre))
 }
 
 export function getFeaturedBooks(): Book[] {
@@ -280,7 +284,7 @@ export function searchBooks(query: string): Book[] {
     (book) =>
       book.title.toLowerCase().includes(lowercaseQuery) ||
       book.author.toLowerCase().includes(lowercaseQuery) ||
-      book.genre.some((g) => g.toLowerCase().includes(lowercaseQuery)),
+      (book.genre && book.genre.some((g) => g.toLowerCase().includes(lowercaseQuery))),
   )
 }
 

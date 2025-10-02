@@ -3,7 +3,14 @@
 import { useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import BookCard from "../components/Bookcard"
-import { mockBooks, mockGenres, searchBooks } from "@/lib/mock-data"
+import { getBooks, getCategories } from "@/lib/book-service"
+import type { Book, Category } from "@/lib/book-service"
+
+type BookWithDetails = Book & {
+  rating?: number
+  reviewCount?: number
+  category?: string
+}
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +24,32 @@ export default function BooksPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedGenre, setSelectedGenre] = useState<string>(categoryFromUrl || "all")
   const [sortBy, setSortBy] = useState<string>("title")
+  const [books, setBooks] = useState<Book[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true)
+      console.log('Loading data...')
+      try {
+        const [booksData, categoriesData] = await Promise.all([
+          getBooks(),
+          getCategories()
+        ])
+        console.log('Books loaded:', booksData)
+        console.log('Categories loaded:', categoriesData)
+        setBooks(booksData)
+        setCategories(categoriesData)
+      } catch (error) {
+        console.error('Error loading data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
 
   useEffect(() => {
     if (categoryFromUrl) {
@@ -25,29 +58,34 @@ export default function BooksPage() {
   }, [categoryFromUrl])
 
   const filteredAndSortedBooks = useMemo(() => {
-    let books = mockBooks
+    let filteredBooks = [...books]
 
     // Apply search filter
     if (searchQuery.trim()) {
-      books = searchBooks(searchQuery)
+      const query = searchQuery.toLowerCase()
+      filteredBooks = filteredBooks.filter((book) => 
+        book.title.toLowerCase().includes(query) ||
+        book.author.toLowerCase().includes(query) ||
+        (book.description?.toLowerCase().includes(query) ?? false)
+      )
     }
 
     // Apply genre filter
     if (selectedGenre !== "all") {
-      books = books.filter((book) => book.genre.includes(selectedGenre))
+      filteredBooks = filteredBooks.filter((book) => 
+        book.category && book.category.toLowerCase() === selectedGenre.toLowerCase()
+      )
     }
 
     // Apply sorting
-    books = [...books].sort((a, b) => {
+    return [...filteredBooks].sort((a, b) => {
       switch (sortBy) {
         case "price-low":
           return a.price - b.price
         case "price-high":
           return b.price - a.price
         case "rating":
-          return b.rating - a.rating
-        case "newest":
-          return new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime()
+          return ((b as BookWithDetails).rating || 0) - ((a as BookWithDetails).rating || 0)
         case "title":
         default:
           return a.title.localeCompare(b.title)
@@ -63,6 +101,20 @@ export default function BooksPage() {
     setSortBy("title")
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">Loading books...</h2>
+          <p className="text-muted-foreground">Please wait while we fetch the latest books.</p>
+        </div>
+      </div>
+    )
+  }
+
+  console.log('Rendering with books:', books)
+  console.log('Filtered and sorted books:', filteredAndSortedBooks)
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -74,7 +126,7 @@ export default function BooksPage() {
           <p className="text-lg text-muted-foreground mb-8">
             {selectedGenre !== "all"
               ? `Explore our collection of ${selectedGenre.toLowerCase()} books`
-              : `Browse through our curated collection of ${mockBooks.length} amazing books`}
+              : `Browse through our curated collection of ${books.length} amazing books`}
           </p>
 
           {/* Search Bar */}
@@ -120,9 +172,9 @@ export default function BooksPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Genres</SelectItem>
-                  {mockGenres.map((genre) => (
-                    <SelectItem key={genre.id} value={genre.name}>
-                      {genre.name}
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -187,13 +239,13 @@ export default function BooksPage() {
                   id={book.id}
                   title={book.title}
                   author={book.author}
-                  image={book.image}
-                  description={book.description}
+                  image={book.image_url || '/placeholder.jpg'}
+                  description={book.description || ''}
                   price={book.price}
-                  rating={book.rating}
-                  reviewCount={book.reviewCount}
-                  genre={book.genre}
-                  inStock={book.inStock}
+                  rating={(book as BookWithDetails).rating}
+                  reviewCount={(book as BookWithDetails).reviewCount}
+                  genre={book.category ? [book.category] : []}
+                  inStock={book.stock_quantity ? book.stock_quantity > 0 : true}
                 />
               ))}
             </div>

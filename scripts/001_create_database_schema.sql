@@ -140,3 +140,16 @@ CREATE POLICY "Users can update their own reviews" ON reviews FOR UPDATE USING (
 CREATE POLICY "Users can delete their own reviews" ON reviews FOR DELETE USING (auth.uid() = customer_id);
 
 
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own profile"
+ON customers FOR SELECT
+USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile"
+ON customers FOR INSERT
+WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile"
+ON customers FOR UPDATE
+USING (auth.uid() = id);
