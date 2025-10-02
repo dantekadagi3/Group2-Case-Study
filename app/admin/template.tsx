@@ -1,6 +1,9 @@
-"use client"
+'use client'
 
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from '@/components/theme-provider'
+import { GeistSans } from 'geist/font'
+
+const geistSans = GeistSans
 
 export default function AdminTemplate({
   children,
@@ -9,8 +12,8 @@ export default function AdminTemplate({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <body className={`${geistSans.className} antialiased bg-background text-foreground`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
         </ThemeProvider>
       </body>

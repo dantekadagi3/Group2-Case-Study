@@ -238,12 +238,12 @@ export default function AdminDashboard() {
                 Manage Orders
               </Link>
             </Button>
-            <Button asChild variant="outline" className="w-full justify-start bg-transparent">
+            {/* <Button asChild variant="outline" className="w-full justify-start bg-transparent">
               <Link href="/admin/books">
                 <BookOpen className="mr-2 h-4 w-4" />
                 Add New Book
               </Link>
-            </Button>
+            </Button> */}
           </CardContent>
         </Card>
       </div>
