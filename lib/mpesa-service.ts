@@ -5,7 +5,7 @@ interface SearchTransactionRequest {
     type: 'search'
     attributes: {
       search_type: 'transaction'
-      search_value: string // txn_id, resource_id, or response_id
+      search_value: string 
     }
   }
 }

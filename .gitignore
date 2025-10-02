@@ -27,3 +27,5 @@ yarn-error.log*
 next-env.d.ts
 
 scripts/
+lib/mock-*.ts
+lib/supabase-data.ts

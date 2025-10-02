@@ -112,7 +112,7 @@ export default function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="hover:bg-accent">
-                <User className="h-5 w-5" />
+                <Link href="/profile"><User className="h-5 w-5" /></Link>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">

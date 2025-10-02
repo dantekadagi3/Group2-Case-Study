@@ -188,22 +188,23 @@ export const getBookById = async (id: string): Promise<BookDetails | null> => {
       return null
     }
 
-    if (data as DatabaseBook) {
+    const bookData = data as DatabaseBook
+    if (bookData) {
       return {
-        id: data.id,
-        title: data.title,
-        author: data.author.name,
-        authorId: data.author.id,
-        description: data.description || "",
-        price: data.price,
-        image_url: data.image_url,
-        stock_quantity: data.stock_quantity,
-        publishedDate: data.published_date,
-        pages: data.pages,
-        isbn: data.isbn,
-        rating: data.rating || 4.5,
-        reviewCount: data.review_count || 0,
-        genre: data.category ? [data.category.name] : []
+        id: bookData.id,
+        title: bookData.title,
+        author: bookData.author.name,
+        authorId: bookData.author.id,
+        description: bookData.description || "",
+        price: bookData.price,
+        image_url: bookData.image_url || undefined,
+        stock_quantity: bookData.stock_quantity || undefined,
+        publishedDate: bookData.published_date,
+        pages: bookData.pages,
+        isbn: bookData.isbn,
+        rating: bookData.rating || 4.5,
+        reviewCount: bookData.reviews_count || 0,
+        genre: bookData.category ? [bookData.category.name] : []
       }
     }
 
@@ -234,12 +235,13 @@ export const getAuthorById = async (id: string): Promise<Author | null> => {
       return null
     }
 
-    if (data) {
+    const authorData = data as AuthorRow
+    if (authorData) {
       return {
-        id: data.id,
-        name: data.name,
-        biography: data.biography,
-        image_url: data.image_url
+        id: authorData.id,
+        name: authorData.name,
+        biography: authorData.biography || undefined,
+        image_url: authorData.image_url || undefined
       }
     }
 
