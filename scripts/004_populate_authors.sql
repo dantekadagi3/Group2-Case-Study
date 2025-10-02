@@ -1,0 +1,8 @@
+-- Populate authors table with mock data
+INSERT INTO authors (id, name, bio, image_url) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'Harper Lee', 'Harper Lee was an American novelist best known for her 1960 novel To Kill a Mockingbird. Born in Monroeville, Alabama, she drew inspiration from her own childhood experiences in the South.', '/harper-lee-author-portrait.jpg'),
+('550e8400-e29b-41d4-a716-446655440002', 'George Orwell', 'George Orwell was an English novelist and essayist, journalist and critic. His work is characterized by lucid prose, biting social criticism, opposition to totalitarianism, and outspoken support of democratic socialism.', '/george-orwell-author-portrait.jpg'),
+('550e8400-e29b-41d4-a716-446655440003', 'Jane Austen', 'Jane Austen was an English novelist known primarily for her six major novels, which interpret, critique and comment upon the British landed gentry at the end of the 18th century.', '/jane-austen-author-portrait.jpg'),
+('550e8400-e29b-41d4-a716-446655440004', 'F. Scott Fitzgerald', 'F. Scott Fitzgerald was an American novelist and short story writer, whose works are the paradigmatic writings of the Jazz Age. He is widely regarded as one of the greatest American writers of the 20th century.', '/f-scott-fitzgerald-author-portrait.jpg'),
+('550e8400-e29b-41d4-a716-446655440005', 'Agatha Christie', 'Agatha Christie was an English writer known for her detective novels, especially those revolving around fictional detectives Hercule Poirot and Miss Marple. She is the best-selling novelist of all time.', '/agatha-christie-author-portrait.jpg')
+ON CONFLICT (id) DO NOTHING;
