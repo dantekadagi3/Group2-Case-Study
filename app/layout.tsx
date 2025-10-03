@@ -18,7 +18,7 @@ const playfairDisplay = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "BookStore - Your Literary Haven",
+  title: "NovelEra - Your Literary Haven",
   description: "Discover your next great read with our curated collection of books",
     generator: 'v0.app'
 }

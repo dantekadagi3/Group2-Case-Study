@@ -13,7 +13,7 @@ export default function Footer() {
             <div className="p-2 bg-primary rounded-lg">
               <BookOpen className="h-6 w-6 text-primary-foreground" />
             </div>
-            <h2 className="text-2xl font-bold font-[var(--font-playfair)] text-foreground">BookStore</h2>
+            <h2 className="text-2xl font-bold font-[var(--font-playfair)] text-foreground">NovelEra</h2>
           </div>
           <p className="text-muted-foreground text-sm leading-relaxed">
             Your destination for discovering great books and expanding your knowledge. Curated collections for every
@@ -63,7 +63,7 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-3">
               <Mail className="h-4 w-4 text-primary flex-shrink-0" />
-              <span>info@bookstore.com</span>
+              <span>info@novelera.com</span>
             </div>
             <div className="flex items-center gap-3">
               <Phone className="h-4 w-4 text-primary flex-shrink-0" />
@@ -75,7 +75,7 @@ export default function Footer() {
 
       {/* Bottom section */}
       <div className="text-center border-t border-border mt-10 pt-6 text-muted-foreground text-sm">
-        <p>&copy; 2025 BookStore. All rights reserved. Built with care for book lovers.</p>
+        <p>&copy; 2025 NovelEra. All rights reserved. Built with care for book lovers.</p>
       </div>
     </footer>
   )

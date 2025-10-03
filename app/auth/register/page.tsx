@@ -84,7 +84,7 @@ export default function RegisterPage() {
               <BookOpen className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold font-[var(--font-playfair)] text-foreground">Join BookStore</h1>
+          <h1 className="text-3xl font-bold font-[var(--font-playfair)] text-foreground">Join NovelEra</h1>
           <p className="text-muted-foreground mt-2">Create your account to start your reading journey</p>
         </div>
 

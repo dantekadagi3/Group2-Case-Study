@@ -29,7 +29,7 @@ export default function Header() {
           <div className="p-2 bg-primary rounded-lg">
             <BookOpen className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold font-[var(--font-playfair)] text-foreground">BookStore</h1>
+          <h1 className="text-2xl font-bold font-[var(--font-playfair)] text-foreground">NovelEra</h1>
         </Link>
       </div>
 

@@ -54,7 +54,7 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-3xl font-bold font-[var(--font-playfair)] text-foreground">Welcome Back</h1>
-          <p className="text-muted-foreground mt-2">Sign in to your BookStore account</p>
+          <p className="text-muted-foreground mt-2">Sign in to your NovelEra account</p>
         </div>
 
         <Card className="shadow-lg border-border/50">
