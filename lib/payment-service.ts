@@ -38,9 +38,7 @@ class PaymentService {
     this.apiKey = process.env.QUIKK_API_KEY || "fb44dec835b8126a70a7c6000d542292";
     this.apiSecret = process.env.QUIKK_API_SECRET || "f072e0b7cf852a76eb49687c43761a29";
     this.shortCode = process.env.MPESA_SHORTCODE || "174379";
-    // this.apiKey = "fb44dec835b8126a70a7c6000d542292";
-    // this.apiSecret = "f072e0b7cf852a76eb49687c43761a29";
-    // this.shortCode = "174379";
+    
     console.log("[Debug] API Credentials:", {
       apiKey: this.apiKey.substring(0, 5) + "...",
       apiSecret: this.apiSecret.substring(0, 5) + "...",
