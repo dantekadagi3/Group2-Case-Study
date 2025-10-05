@@ -114,18 +114,19 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-[var(--font-playfair)]">Dashboard</h1>
+          <h1 className="text-3xl font-bold ]">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here's what's happening with your bookstore.</p>
         </div>
-        <Button 
+        {/**<Button 
           variant="outline" 
           onClick={loadDashboardData}
           disabled={isLoading}
           className="gap-2"
         >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+         <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> 
           Refresh
         </Button>
+        */} 
       </div>
 
       {/* Stats Grid */}
