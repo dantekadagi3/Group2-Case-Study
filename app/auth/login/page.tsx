@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BookOpen, Eye, EyeOff } from "lucide-react"
+import { validateEmail, validatePassword } from "@/lib/validtion"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -33,6 +34,18 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+
+     const emailError = validateEmail(email)
+  const passwordError = validatePassword(password)
+
+  if (emailError) {
+    setError(emailError)
+    return
+  }
+  if (passwordError) {
+    setError(passwordError)
+    return
+  }
 
     try {
       const success = await login(email, password)
