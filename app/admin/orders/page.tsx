@@ -103,7 +103,7 @@ export default function OrdersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold font-[var(--font-playfair)]">Order Management</h1>
+        <h1 className="text-3xl font-bold">Order Management</h1>
         <p className="text-muted-foreground">Track and manage customer orders</p>
       </div>
 

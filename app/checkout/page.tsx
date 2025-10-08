@@ -23,6 +23,12 @@ export default function CheckoutPage() {
   const router = useRouter()
   const supabase = createClient()
 
+  const formatPrice = (amount: number) =>
+    new Intl.NumberFormat("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+
   const [formData, setFormData] = useState({
     email: user?.email || "",
     firstName: user?.firstName || "",
@@ -44,7 +50,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     const loadUserProfile = async () => {
       if (!user) return
-
       setIsLoadingProfile(true)
       try {
         const { data, error } = await supabase.from("customers").select("*").eq("id", user.id).single()
@@ -83,7 +88,6 @@ export default function CheckoutPage() {
     e.preventDefault()
     setIsProcessing(true)
 
-    // Validate form
     const requiredFields = ["firstName", "lastName", "email", "address", "city", "postalCode", "phone"]
     const missingFields = requiredFields.filter((field) => !formData[field as keyof typeof formData].trim())
 
@@ -118,7 +122,6 @@ export default function CheckoutPage() {
 
   const handlePaymentSuccess = async (receiptNumber: string) => {
     console.log("[v0] Payment successful:", receiptNumber)
-
     try {
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
@@ -135,7 +138,6 @@ export default function CheckoutPage() {
 
       if (orderError) throw orderError
 
-      // Create order items
       const orderItems = cartItems.map((item) => ({
         order_id: orderData.id,
         book_id: item.id,
@@ -145,7 +147,6 @@ export default function CheckoutPage() {
 
       await supabase.from("order_items").insert(orderItems)
 
-      // Create payment record
       await supabase.from("payments").insert({
         order_id: orderData.id,
         amount: totalPrice,
@@ -155,7 +156,6 @@ export default function CheckoutPage() {
         status: "completed",
       })
 
-      // Clear cart and redirect
       clearCart()
       router.push(`/order-confirmation?receipt=${receiptNumber}&order=${orderReference}`)
     } catch (error) {
@@ -238,47 +238,22 @@ export default function CheckoutPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="firstName">First Name</Label>
-                            <Input
-                              id="firstName"
-                              name="firstName"
-                              value={formData.firstName}
-                              onChange={handleInputChange}
-                              required
-                            />
+                            <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
                           </div>
                           <div>
                             <Label htmlFor="lastName">Last Name</Label>
-                            <Input
-                              id="lastName"
-                              name="lastName"
-                              value={formData.lastName}
-                              onChange={handleInputChange}
-                              required
-                            />
+                            <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
                           </div>
                         </div>
 
                         <div>
                           <Label htmlFor="email">Email</Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            required
-                          />
+                          <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required />
                         </div>
 
                         <div>
                           <Label htmlFor="address">Address</Label>
-                          <Input
-                            id="address"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            required
-                          />
+                          <Input id="address" name="address" value={formData.address} onChange={handleInputChange} required />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -288,48 +263,23 @@ export default function CheckoutPage() {
                           </div>
                           <div>
                             <Label htmlFor="postalCode">Postal Code</Label>
-                            <Input
-                              id="postalCode"
-                              name="postalCode"
-                              value={formData.postalCode}
-                              onChange={handleInputChange}
-                              required
-                            />
+                            <Input id="postalCode" name="postalCode" value={formData.postalCode} onChange={handleInputChange} required />
                           </div>
                         </div>
 
                         <div>
                           <Label htmlFor="phone">Phone Number (M-Pesa)</Label>
-                          <Input
-                            id="phone"
-                            name="phone"
-                            type="tel"
-                            placeholder="254XXXXXXXXX"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            required
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Enter your M-Pesa registered phone number
-                          </p>
+                          <Input id="phone" name="phone" type="tel" placeholder="254XXXXXXXXX" value={formData.phone} onChange={handleInputChange} required />
+                          <p className="text-xs text-muted-foreground mt-1">Enter your M-Pesa registered phone number</p>
                         </div>
 
                         <div className="flex items-center space-x-2">
                           <Checkbox id="saveInfo" checked={saveInfo} onCheckedChange={setSaveInfo} />
-                          <Label htmlFor="saveInfo" className="text-sm">
-                            Save this information for next time
-                          </Label>
+                          <Label htmlFor="saveInfo" className="text-sm">Save this information for next time</Label>
                         </div>
 
                         <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
-                          {isProcessing ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            "Continue to Payment"
-                          )}
+                          {isProcessing ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</>) : ("Continue to Payment")}
                         </Button>
                       </form>
                     )}
@@ -345,7 +295,6 @@ export default function CheckoutPage() {
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                 />
-
                 <Button variant="outline" onClick={() => setShowPayment(false)} className="w-full">
                   Back to Shipping Information
                 </Button>
@@ -360,7 +309,6 @@ export default function CheckoutPage() {
                 <CardTitle className="font-[var(--font-playfair)]">Order Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Order Items */}
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex gap-3">
@@ -372,7 +320,9 @@ export default function CheckoutPage() {
                         <p className="text-xs text-muted-foreground">by {item.author}</p>
                         <div className="flex justify-between items-center mt-1">
                           <span className="text-xs text-muted-foreground">Qty: {item.quantity}</span>
-                          <span className="font-medium text-sm">${(item.price * item.quantity).toFixed(2)}</span>
+                          <span className="font-medium text-sm">
+                            Ksh {formatPrice(item.price * item.quantity)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -381,15 +331,14 @@ export default function CheckoutPage() {
 
                 <Separator />
 
-                {/* Price Breakdown */}
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${totalPrice.toFixed(2)}</span>
+                    <span>Ksh {formatPrice(totalPrice)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+                    <span>{shipping === 0 ? "Free" : `Ksh ${formatPrice(shipping)}`}</span>
                   </div>
                 </div>
 
@@ -397,7 +346,7 @@ export default function CheckoutPage() {
 
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>${grandTotal.toFixed(2)}</span>
+                  <span>Ksh {formatPrice(grandTotal)}</span>
                 </div>
 
                 {showPayment && (

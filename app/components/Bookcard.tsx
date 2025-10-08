@@ -88,7 +88,11 @@ export default function BookCard({
         </div>
 
         <div className="flex  flex-col space-y-2 items-center justify-between mt-4 pt-2 border-t border-border">
-          <span className="text-xl font-bold text-primary">Ksh{price.toFixed(2)}</span>
+          <span className="text-xl font-bold text-primary"> Ksh{" "}{new Intl.NumberFormat("en-IN", { 
+
+  minimumFractionDigits: 2, 
+  maximumFractionDigits: 2 
+}).format(price)}</span>
           <CartButton book={{ id, title, author, image, description, price }} disabled={!inStock} />
         </div>
       </div>

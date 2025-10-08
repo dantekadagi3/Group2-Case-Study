@@ -1,4 +1,5 @@
 "use client"
+
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -15,34 +16,40 @@ import type { Database } from '@/lib/database-types'
 
 type OrderWithItems = Database['public']['Tables']['orders']['Row'] & {
   order_items: (Database['public']['Tables']['order_items']['Row'] & {
-    books: Pick<Database['public']['Tables']['books']['Row'], 'title'>
+    books?: { title: string } | null
   })[]
 }
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth()
   const router = useRouter()
-  const [profile, setProfile] = useState<Database['public']['Tables']['customers']['Row'] | null>(null)
+
+  type CustomerProfile = Database['public']['Tables']['customers']['Row'] & {
+    avatar_url?: string | null
+  }
+
+  const [profile, setProfile] = useState<CustomerProfile | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<OrderWithItems[]>([])
-  
+
   useEffect(() => {
     if (!user) {
       router.push('/auth/login')
       return
     }
-    
+
     const loadData = async () => {
       await Promise.all([fetchProfile(), fetchOrders()])
       setLoading(false)
     }
-    
+
     loadData()
   }, [user])
 
   const fetchProfile = async () => {
     try {
+      if (!user) return
       const supabase = createClient()
       const { data, error } = await supabase
         .from('customers')
@@ -56,7 +63,7 @@ export default function ProfilePage() {
       console.error('Error fetching profile:', error)
       toast({
         title: 'Error',
-        description: 'Failed to load profile data',
+        description: 'Failed to load profile data.',
         variant: 'destructive',
       })
     }
@@ -64,6 +71,7 @@ export default function ProfilePage() {
 
   const fetchOrders = async () => {
     try {
+      if (!user) return
       const supabase = createClient()
       const { data, error } = await supabase
         .from('orders')
@@ -83,13 +91,12 @@ export default function ProfilePage() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      
-      // Map to the expected type with flattened items
-      const mappedOrders: OrderWithItems[] = (data || []).map(order => ({
+
+      const mappedOrders: OrderWithItems[] = (data || []).map((order: any) => ({
         ...order,
         order_items: order.order_items || []
       }))
-      
+
       setOrders(mappedOrders)
     } catch (error) {
       console.error('Error fetching orders:', error)
@@ -107,29 +114,29 @@ export default function ProfilePage() {
         .update({
           first_name: profile.first_name,
           last_name: profile.last_name,
-          email: profile.email
+          email: profile.email,
         })
         .eq('id', user.id)
 
       if (error) throw error
-      
+
       setIsEditing(false)
       toast({
         title: 'Success',
-        description: 'Profile updated successfully',
+        description: 'Profile updated successfully.',
       })
     } catch (error) {
       console.error('Error updating profile:', error)
       toast({
         title: 'Error',
-        description: 'Failed to update profile',
+        description: 'Failed to update profile.',
         variant: 'destructive',
       })
     }
   }
 
   const handleSignOut = async () => {
-    await signOut()
+    await signOut() // ✅ previously missing definition
     router.push('/')
   }
 
@@ -144,7 +151,7 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="container mx-auto py-10">
-        <p className="text-center text-muted-foreground">Profile not found</p>
+        <p className="text-center text-muted-foreground">Profile not found.</p>
       </div>
     )
   }
@@ -169,6 +176,7 @@ export default function ProfilePage() {
           </Button>
         </div>
 
+        {/* Profile Tab */}
         <TabsContent value="profile">
           <Card>
             <CardHeader>
@@ -235,11 +243,7 @@ export default function ProfilePage() {
                     </Button>
                   ) : (
                     <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsEditing(false)}
-                      >
+                      <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
                         Cancel
                       </Button>
                       <Button type="submit">Save Changes</Button>
@@ -251,6 +255,7 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
+        {/* Orders Tab */}
         <TabsContent value="orders">
           <Card>
             <CardHeader>
@@ -268,11 +273,16 @@ export default function ProfilePage() {
               ) : (
                 <div className="space-y-6">
                   {orders.map((order) => (
-                    <Card key={order.id}>
+                    <Card
+                      key={order.id}
+                      className="bg-[#FFF3E0] border border-[#FFE0B2] shadow-sm hover:shadow-md transition-shadow duration-200"
+                    >
                       <CardContent className="p-4">
                         <div className="flex justify-between items-center mb-4">
                           <div>
-                            <p className="font-semibold">Order #{order.id.slice(-8).toUpperCase()}</p>
+                            <p className="font-semibold">
+                              Order #{order.id.slice(-8).toUpperCase()}
+                            </p>
                             <p className="text-sm text-muted-foreground">
                               {new Date(order.created_at).toLocaleDateString()}
                             </p>
@@ -281,24 +291,34 @@ export default function ProfilePage() {
                             <p className="font-semibold">
                               Total: ${(order.total_amount || 0).toFixed(2)}
                             </p>
-                            <span className={`text-sm px-2 py-1 rounded-full text-xs ${
-                              order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
+                            <span
+                              className={`text-sm px-2 py-1 rounded-full ${
+                                order.status === 'delivered'
+                                  ? 'bg-green-100 text-green-800'
+                                  : order.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : order.status === 'processing'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
                               {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                             </span>
                           </div>
                         </div>
+
                         <div className="divide-y">
                           {order.order_items.map((item) => (
                             <div key={item.id} className="py-2 flex justify-between">
                               <div>
-                                <p className="font-medium">{item.books.title}</p>
-                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                <p className="font-medium">{item.books?.title || 'Untitled Book'}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Qty: {item.quantity}
+                                </p>
                               </div>
-                              <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                              <p className="font-medium">
+                                ${(item.price * item.quantity).toFixed(2)}
+                              </p>
                             </div>
                           ))}
                         </div>

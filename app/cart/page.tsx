@@ -195,36 +195,52 @@ export default function CartPage() {
                 <Separator />
 
                 {/* Price Breakdown */}
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal ({totalItems} items)</span>
-                    <span>${totalPrice.toFixed(2)}</span>
-                  </div>
+              <div className="space-y-2">
+  <div className="flex justify-between">
+    <span>Subtotal ({totalItems} items)</span>
+    <span>
+      Ksh{" "}
+      {new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(totalPrice)}
+    </span>
+  </div>
+</div>
 
-                  {discount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>Discount</span>
-                      <span>-${discount.toFixed(2)}</span>
-                    </div>
-                  )}
+                {discount > 0 && (
+  <div className="flex justify-between text-green-600">
+    <span>Discount</span>
+    <span>
+      - Ksh{" "}
+      {new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(discount)}
+    </span>
+  </div>
+)}
 
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span>{shipping === 0 ? <Badge variant="secondary">Free</Badge> : `$${shipping.toFixed(2)}`}</span>
+                    <span>{shipping === 0 ? <Badge variant="secondary">Free</Badge> : `Ksh${shipping.toFixed(2)}`}</span>
                   </div>
 
-                  {totalPrice < 50 && shipping > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Add ${(50 - totalPrice).toFixed(2)} more for free shipping
-                    </p>
-                  )}
-                </div>
+                  Add {"Ksh "}
+  {new Intl.NumberFormat("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(50 - totalPrice)}{" "}more for Free Shipping
 
                 <Separator />
 
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>${grandTotal.toFixed(2)}</span>
+                  <span> Ksh{" "}
+  {new Intl.NumberFormat("en-IN", { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  }).format(grandTotal)}</span>
                 </div>
 
                 <div className="space-y-3 pt-4">
