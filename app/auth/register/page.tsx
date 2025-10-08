@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BookOpen, Eye, EyeOff } from "lucide-react"
+import { validateEmail, validatePassword } from "@/lib/validtion"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -40,6 +41,20 @@ export default function RegisterPage() {
     e.preventDefault()
     setError("")
     setRegistrationStatus('idle')
+
+  const emailError = validateEmail(formData.email)
+  const passwordError = validatePassword(formData.password)
+
+  if (emailError) {
+    setError(emailError)
+    return
+  }
+
+  if (passwordError) {
+    setError(passwordError)
+    return
+  }
+
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
