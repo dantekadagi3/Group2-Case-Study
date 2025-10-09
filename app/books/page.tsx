@@ -28,6 +28,8 @@ export default function BooksPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+
+  
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true)
@@ -93,7 +95,7 @@ export default function BooksPage() {
     })
 
     return books
-  }, [searchQuery, selectedGenre, sortBy])
+  }, [books, searchQuery, selectedGenre, sortBy])
 
   const clearFilters = () => {
     setSearchQuery("")
