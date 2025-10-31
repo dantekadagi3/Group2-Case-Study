@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { paymentService } from "@/lib/payment-service"
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,12 +10,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing checkoutRequestId" }, { status: 400 })
     }
 
-    const status = await paymentService.checkPaymentStatus(checkoutRequestId)
+    const supabase = await createClient()
+    // First, try to find payment by transaction_id (where we stored Quikk checkout id)
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('transaction_id', checkoutRequestId)
+      .limit(1)
+      .single()
 
-    return NextResponse.json({
-      success: true,
-      status,
-    })
+    if (error) {
+      console.error('[v0] Payment status lookup error:', error)
+      // As a fallback, create a failed payment audit record so the system tracks the unknown payment
+      try {
+        const { error: createErr } = await supabase.from('payments').insert({
+          order_id: null,
+          amount: 0,
+          payment_method: 'mpesa',
+          transaction_id: checkoutRequestId,
+          mpesa_receipt_number: null,
+          phone_number: null,
+          status: 'failed',
+        })
+        if (createErr) console.error('[v0] Failed to create fallback failed payment record:', createErr)
+      } catch (e) {
+        console.error('[v0] Error creating fallback payment record:', e)
+      }
+
+      return NextResponse.json({ success: false, error: 'Unable to find payment' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, status: data })
   } catch (error) {
     console.error("[v0] Payment status API error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

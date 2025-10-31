@@ -38,6 +38,7 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [saveInfo, setSaveInfo] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
+  const [pendingOrderId, setPendingOrderId] = useState<number | null>(null)
   const [orderReference] = useState(() => `ORD-${Date.now().toString().slice(-6)}`)
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
 
@@ -112,55 +113,62 @@ export default function CheckoutPage() {
       }
     }
 
-    setIsProcessing(false)
-    setShowPayment(true)
+    try {
+      // Create pending order on server to reserve the order and allow callback to update it
+      setIsProcessing(true)
+      const createRes = await fetch('/api/orders/create-pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id || null,
+          cartItems,
+          totalAmount: grandTotal,
+          shippingAddress: `${formData.address}, ${formData.city}, ${formData.postalCode}, ${formData.country}`,
+          orderReference,
+        })
+      })
+
+      const createData = await createRes.json()
+      if (!createRes.ok) throw new Error(createData.error || 'Failed to create pending order')
+      setPendingOrderId(createData.orderId)
+      setShowPayment(true)
+    } catch (err) {
+      console.error('[v0] Create pending order error:', err)
+      alert('Unable to create order. Please try again.')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const handlePaymentSuccess = async (receiptNumber: string) => {
-    console.log("[v0] Payment successful:", receiptNumber)
+    console.log('[v0] Payment successful:', receiptNumber)
 
     try {
-      const { data: orderData, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          customer_id: user?.id,
-          total_amount: totalPrice,
-          status: "processing",
-          payment_status: "paid",
-          payment_method: "mpesa",
-          shipping_address: `${formData.address}, ${formData.city}, ${formData.postalCode}, ${formData.country}`,
-        })
-        .select()
+      // Try to find the payment record updated by the callback
+      const { data: paymentData, error: payErr } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('mpesa_receipt_number', receiptNumber)
+        .limit(1)
         .single()
 
-      if (orderError) throw orderError
+      if (payErr) console.warn('[v0] Could not find payment record by receipt:', payErr)
 
-      // Create order items
-      const orderItems = cartItems.map((item) => ({
-        order_id: orderData.id,
-        book_id: item.id,
-        quantity: item.quantity,
-        price: item.price,
-      }))
+      // If we have an order id from the payment record, use it; otherwise fall back to orderReference
+      const orderId = paymentData?.order_id || null
 
-      await supabase.from("order_items").insert(orderItems)
+      clearCart()
+      // Redirect to confirmation; include order id if available
+      const params = new URLSearchParams()
+      params.set('receipt', receiptNumber)
+      if (orderId) params.set('orderId', String(orderId))
+      else params.set('order', orderReference)
 
-      // Create payment record
-      await supabase.from("payments").insert({
-        order_id: orderData.id,
-        amount: totalPrice,
-        payment_method: "mpesa",
-        mpesa_receipt_number: receiptNumber,
-        phone_number: formData.phone,
-        status: "completed",
-      })
-
-      // Clear cart and redirect
+      router.push(`/order-confirmation?${params.toString()}`)
+    } catch (error) {
+      console.error('[v0] Post-payment redirect error:', error)
       clearCart()
       router.push(`/order-confirmation?receipt=${receiptNumber}&order=${orderReference}`)
-    } catch (error) {
-      console.error("Error creating order:", error)
-      alert("Order creation failed. Please contact support.")
     }
   }
 
@@ -169,7 +177,7 @@ export default function CheckoutPage() {
     alert(`Payment failed: ${error}`)
   }
 
-  const shipping = totalPrice > 50 ? 0 : 5.99
+  const shipping = totalPrice > 50 ? 0 : 0.99
   const grandTotal = totalPrice + shipping
 
   if (!user) {
@@ -315,7 +323,7 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="saveInfo" checked={saveInfo} onCheckedChange={setSaveInfo} />
+                          <Checkbox id="saveInfo" checked={saveInfo} onCheckedChange={(v) => setSaveInfo(Boolean(v))} />
                           <Label htmlFor="saveInfo" className="text-sm">
                             Save this information for next time
                           </Label>
@@ -338,13 +346,14 @@ export default function CheckoutPage() {
               </>
             ) : (
               <div className="space-y-6">
-                <MpesaPayment
-                  amount={grandTotal}
-                  orderReference={orderReference}
-                  phoneNumber={formData.phone}
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                />
+                  <MpesaPayment
+                    amount={grandTotal}
+                    orderReference={orderReference}
+                    orderId={pendingOrderId}
+                    phoneNumber={formData.phone}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                  />
 
                 <Button variant="outline" onClick={() => setShowPayment(false)} className="w-full">
                   Back to Shipping Information

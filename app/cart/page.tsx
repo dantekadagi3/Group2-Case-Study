@@ -32,7 +32,7 @@ export default function CartPage() {
   }
 
   const finalTotal = Math.max(0, totalPrice - discount)
-  const shipping = totalPrice > 50 ? 0 : 5.99
+  const shipping = totalPrice > 50 ? 0 : 0.99
   const grandTotal = finalTotal + shipping
 
   if (cartItems.length === 0) {
