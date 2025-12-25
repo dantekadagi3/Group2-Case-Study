@@ -13,12 +13,14 @@ import { Loader2, Smartphone, CheckCircle, XCircle, Clock } from "lucide-react"
 interface MpesaPaymentProps {
   amount: number
   orderReference: string
+  orderId?: number | null
+  phoneNumber?: string
   onSuccess: (receiptNumber: string) => void
   onError: (error: string) => void
 }
 
-export default function MpesaPayment({ amount, orderReference, onSuccess, onError }: MpesaPaymentProps) {
-  const [phoneNumber, setPhoneNumber] = useState("")
+export default function MpesaPayment({ amount, orderReference, orderId, phoneNumber: initialPhone, onSuccess, onError }: MpesaPaymentProps) {
+  const [phoneNumber, setPhoneNumber] = useState(initialPhone || "")
   const [isProcessing, setIsProcessing] = useState(false)
   const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "failed">("idle")
@@ -67,6 +69,7 @@ export default function MpesaPayment({ amount, orderReference, onSuccess, onErro
           amount,
           phoneNumber: phoneNumber.replace(/\s/g, ""),
           orderReference,
+          orderId: orderId ?? null,
         }),
       })
 
@@ -106,28 +109,23 @@ export default function MpesaPayment({ amount, orderReference, onSuccess, onErro
         const data = await response.json()
 
         if (data.success && data.status) {
-          const { resultCode, resultDesc, mpesaReceiptNumber } = data.status
+          // DB payments record shape
+          const statusField = data.status.status || data.status.payment_status || data.status.status_text
+          const mpesaReceipt = data.status.mpesa_receipt_number || data.status.mpesa_receipt || data.status.mpesaReceipt
 
-          if (resultCode === "0") {
-            // Payment successful
-            setPaymentStatus("success")
-            setStatusMessage("Payment completed successfully!")
+          if (statusField === 'completed' || statusField === 'paid' || data.status.resultCode === '0') {
+            setPaymentStatus('success')
+            setStatusMessage('Payment completed successfully!')
             setIsProcessing(false)
-            onSuccess(mpesaReceiptNumber || requestId)
+            onSuccess(mpesaReceipt || requestId)
             return
-          } else if (resultCode === "1032") {
-            // User cancelled
-            setPaymentStatus("failed")
-            setStatusMessage("Payment was cancelled by user")
+          }
+
+          if (data.status.resultCode === '1032' || statusField === 'cancelled') {
+            setPaymentStatus('failed')
+            setStatusMessage('Payment was cancelled by user')
             setIsProcessing(false)
-            onError("Payment cancelled")
-            return
-          } else if (resultCode === "1037") {
-            // Timeout
-            setPaymentStatus("failed")
-            setStatusMessage("Payment request timed out")
-            setIsProcessing(false)
-            onError("Payment timed out")
+            onError('Payment cancelled')
             return
           }
         }

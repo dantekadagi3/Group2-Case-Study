@@ -44,7 +44,7 @@ export default function HomePage() {
       >
         <div className="flex flex-col items-center justify-center text-center w-full h-full px-6">
           <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold text-white font-[var(--font-playfair)] drop-shadow-2xl [text-shadow:_4px_4px_8px_rgb(0_0_0_/_90%)]">
-            Welcome to BookStore
+            Welcome to NovelEra
           </h1>
           <p className="mt-6 text-xl sm:text-2xl md:text-3xl text-white max-w-3xl leading-relaxed drop-shadow-xl [text-shadow:_2px_2px_6px_rgb(0_0_0_/_80%)]">
             Discover your next great read from our curated collection of timeless classics and modern masterpieces

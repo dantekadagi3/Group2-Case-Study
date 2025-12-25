@@ -1,21 +1,30 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { paymentService } from "@/lib/payment-service"
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { amount, phoneNumber, orderReference } = body
+    const { amount, phoneNumber, orderReference, orderId } = body
 
     // Validate required fields
-    if (!amount || !phoneNumber || !orderReference) {
+    if (!amount || !phoneNumber || !orderReference || !orderId) {
       return NextResponse.json(
-        { error: "Missing required fields: amount, phoneNumber, orderReference" },
+        { error: "Missing required fields: amount, phoneNumber, orderReference, orderId" },
         { status: 400 },
       )
     }
 
-    // Format phone number
-    const formattedPhone = paymentService.formatPhoneNumber(phoneNumber)
+    // Lightweight phone formatting (don't rely on private service method)
+    const formatPhone = (num: string) => {
+      let formatted = (num || '').toString().replace(/\s+/g, "").replace(/[^\d]/g, "")
+      if (formatted.startsWith("0")) formatted = "254" + formatted.substring(1)
+      if (formatted.startsWith("+254")) formatted = formatted.substring(1)
+      if (formatted.length === 9) formatted = "254" + formatted
+      return formatted
+    }
+
+    const formattedPhone = formatPhone(phoneNumber)
 
     // Initiate M-Pesa payment through Quikk
     const paymentResponse = await paymentService.initiateMpesaPayment({
@@ -23,7 +32,7 @@ export async function POST(request: NextRequest) {
       phoneNumber: formattedPhone,
       accountReference: orderReference,
       transactionDesc: `BookStore Order ${orderReference}`,
-      callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/callback`,
+      callbackUrl: process.env.NEXT_PUBLIC_QUIKK_CALLBACK_URL || `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/callback`,
     })
 
     if (!paymentResponse.success) {
@@ -34,6 +43,19 @@ export async function POST(request: NextRequest) {
       }, { 
         status: 400 
       })
+    }
+
+    // Save checkoutRequestId to payments placeholder for later correlation (use transaction_id column)
+    try {
+      const supabase = await createClient()
+      const { error: upsertError } = await supabase
+        .from('payments')
+        .update({ transaction_id: paymentResponse.checkoutRequestId, phone_number: formattedPhone })
+        .eq('order_id', orderId)
+
+      if (upsertError) console.error('[v0] Failed to save transaction id to payment record:', upsertError)
+    } catch (e) {
+      console.error('[v0] Supabase update error:', e)
     }
 
     return NextResponse.json({

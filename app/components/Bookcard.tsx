@@ -87,8 +87,8 @@ export default function BookCard({
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-4 pt-2 border-t border-border">
-          <span className="text-xl font-bold text-primary">${price.toFixed(2)}</span>
+        <div className="flex  flex-col space-y-2 items-center justify-between mt-4 pt-2 border-t border-border">
+          <span className="text-xl font-bold text-primary">Ksh{price.toFixed(2)}</span>
           <CartButton book={{ id, title, author, image, description, price }} disabled={!inStock} />
         </div>
       </div>
